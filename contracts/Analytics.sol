@@ -68,5 +68,28 @@ contract Analytics {
         );
         emit TokenUpdated(tokenAddress, price, volume);
     }
+
+    function updateProtocol(
+        address protocolAddress,
+        string memory name,
+        uint256 tvl,
+        uint256 users
+    ) external onlyDataProvider {
+        protocols[protocolAddress] = ProtocolData(name,
+        tvl,
+        users,
+        block.timestamp
+        );
+        emit ProtocolUpdated(protocolAddress, tvl,users);
+    }
+
+    //view functions
+    function getToken(address tokenAddress) external view returns (TokenData memory) {
+        return tokens[tokenAddress];
+    }
+
+    function getProtocols(address protocolAddress) external view returns(ProtocolData memory) {
+        return protocols[protocolAddress];
+    }
     
 }
