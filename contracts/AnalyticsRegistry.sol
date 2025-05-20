@@ -1,37 +1,39 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-
+/**
+ * @title AnalyticsRegistry
+ * @dev Main registry contract for analytics data collection and management
+ */
 contract AnalyticsRegistry {
     address public owner;
     bool public paused;
-
+    
     modifier onlyOwner() {
-        require(msg.sender == owner, "Not the owner");
+        require(msg.sender == owner, "Not owner");
         _;
     }
-
+    
     modifier whenNotPaused() {
-        require(!paused, "Contract is paused.");
+        require(!paused, "Contract paused");
         _;
     }
-
+    
     modifier nonReentrant() {
         require(!locked, "Reentrant call");
         locked = true;
         _;
         locked = false;
     }
-
+    
     bool private locked;
-
-
+    // Structs
     struct Protocol {
         string name;
         address contractAddress;
         uint256 tvl;
         uint256 volume24h;
-        uint256 uinqueUsers;
+        uint256 uniqueUsers;
         uint256 lastUpdated;
     }
 
@@ -44,5 +46,20 @@ contract AnalyticsRegistry {
         uint256 lastUpdated;
     }
 
+    // State variables
+    mapping(address => Protocol) public protocols;
+    mapping(address => TokenMetrics) public tokens;
+    mapping(address => bool) public authorizedAggregators;
     
+    address[] public registeredProtocols;
+    address[] public registeredTokens;
+
+    // Events
+    event ProtocolAdded(address indexed protocolAddress, string name);
+    event ProtocolUpdated(address indexed protocolAddress, uint256 tvl, uint256 volume24h, uint256 uniqueUsers);
+    event TokenAdded(address indexed tokenAddress, string symbol);
+    event TokenMetricsUpdated(address indexed tokenAddress, uint256 price, uint256 volume24h, uint256 marketCap);
+    event AggregatorAuthorized(address indexed aggregator);
+    event AggregatorRevoked(address indexed aggregator);
+
 }
