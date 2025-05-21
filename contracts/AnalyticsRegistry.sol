@@ -146,5 +146,29 @@ contract AnalyticsRegistry {
         emit TokenMetricsUpdated(_tokenAddress, _price, _volume24h, _marketCap);
     }
 
+       // Aggregator Management
+    function authorizeAggregator(address _aggregator) external onlyOwner {
+        require(_aggregator != address(0), "Invalid aggregator address");
+        require(!authorizedAggregators[_aggregator], "Already authorized");
+        
+        authorizedAggregators[_aggregator] = true;
+        emit AggregatorAuthorized(_aggregator);
+    }
+
+    function revokeAggregator(address _aggregator) external onlyOwner {
+        require(authorizedAggregators[_aggregator], "Not authorized");
+        
+        authorizedAggregators[_aggregator] = false;
+        emit AggregatorRevoked(_aggregator);
+    }
+
+    // View Functions
+    function getProtocolCount() external view returns (uint256) {
+        return registeredProtocols.length;
+    }
+
+    function getTokenCount() external view returns (uint256) {
+        return registeredTokens.length;
+    }
 
 }
