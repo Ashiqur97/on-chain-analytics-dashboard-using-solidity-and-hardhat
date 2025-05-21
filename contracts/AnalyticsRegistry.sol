@@ -109,5 +109,42 @@ contract AnalyticsRegistry {
         emit ProtocolUpdated(_protocolAddress, _tvl, _volume24h, _uniqueUsers);
     }
 
+       // Token Management
+    function addToken(address _tokenAddress, string memory _symbol) external onlyOwner {
+        require(_tokenAddress != address(0), "Invalid token address");
+        require(bytes(tokens[_tokenAddress].symbol).length == 0, "Token already exists");
+
+        tokens[_tokenAddress] = TokenMetrics({
+            symbol: _symbol,
+            price: 0,
+            volume24h: 0,
+            marketCap: 0,
+            holders: 0,
+            lastUpdated: block.timestamp
+        });
+
+        registeredTokens.push(_tokenAddress);
+        emit TokenAdded(_tokenAddress, _symbol);
+    }
+
+    function updateTokenMetrics(
+        address _tokenAddress,
+        uint256 _price,
+        uint256 _volume24h,
+        uint256 _marketCap,
+        uint256 _holders
+    ) external onlyAuthorizedAggregator whenNotPaused nonReentrant {
+        require(bytes(tokens[_tokenAddress].symbol).length > 0, "Token not registered");
+
+        TokenMetrics storage token = tokens[_tokenAddress];
+        token.price = _price;
+        token.volume24h = _volume24h;
+        token.marketCap = _marketCap;
+        token.holders = _holders;
+        token.lastUpdated = block.timestamp;
+
+        emit TokenMetricsUpdated(_tokenAddress, _price, _volume24h, _marketCap);
+    }
+
 
 }
