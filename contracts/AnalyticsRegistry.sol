@@ -62,7 +62,7 @@ contract AnalyticsRegistry {
     event AggregatorAuthorized(address indexed aggregator);
     event AggregatorRevoked(address indexed aggregator);
 
-     // Modifiers
+    // Modifiers
     modifier onlyAuthorizedAggregator() {
         require(authorizedAggregators[msg.sender], "Not authorized aggregator");
         _;
@@ -92,7 +92,7 @@ contract AnalyticsRegistry {
         emit ProtocolAdded(_protocolAddress, _name);
     }
 
-     function updateProtocolMetrics(
+    function updateProtocolMetrics(
         address _protocolAddress,
         uint256 _tvl,
         uint256 _volume24h,
@@ -109,7 +109,7 @@ contract AnalyticsRegistry {
         emit ProtocolUpdated(_protocolAddress, _tvl, _volume24h, _uniqueUsers);
     }
 
-       // Token Management
+    // Token Management
     function addToken(address _tokenAddress, string memory _symbol) external onlyOwner {
         require(_tokenAddress != address(0), "Invalid token address");
         require(bytes(tokens[_tokenAddress].symbol).length == 0, "Token already exists");
@@ -146,7 +146,7 @@ contract AnalyticsRegistry {
         emit TokenMetricsUpdated(_tokenAddress, _price, _volume24h, _marketCap);
     }
 
-       // Aggregator Management
+    // Aggregator Management
     function authorizeAggregator(address _aggregator) external onlyOwner {
         require(_aggregator != address(0), "Invalid aggregator address");
         require(!authorizedAggregators[_aggregator], "Already authorized");
@@ -171,4 +171,56 @@ contract AnalyticsRegistry {
         return registeredTokens.length;
     }
 
+    function getProtocolMetrics(address _protocolAddress) 
+        external 
+        view 
+        returns (
+            string memory name,
+            uint256 tvl,
+            uint256 volume24h,
+            uint256 uniqueUsers,
+            uint256 lastUpdated
+        ) 
+    {
+        Protocol memory protocol = protocols[_protocolAddress];
+        return (
+            protocol.name,
+            protocol.tvl,
+            protocol.volume24h,
+            protocol.uniqueUsers,
+            protocol.lastUpdated
+        );
+    }
+
+    function getTokenMetrics(address _tokenAddress)
+        external
+        view
+        returns (
+            string memory symbol,
+            uint256 price,
+            uint256 volume24h,
+            uint256 marketCap,
+            uint256 holders,
+            uint256 lastUpdated
+        )
+    {
+        TokenMetrics memory token = tokens[_tokenAddress];
+        return (
+            token.symbol,
+            token.price,
+            token.volume24h,
+            token.marketCap,
+            token.holders,
+            token.lastUpdated
+        );
+    }
+
+    // Emergency Functions
+    function pause() external onlyOwner {
+        paused = true;
+    }
+
+    function unpause() external onlyOwner {
+        paused = false;
+    }
 }
