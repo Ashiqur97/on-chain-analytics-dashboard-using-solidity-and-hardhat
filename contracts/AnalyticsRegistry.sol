@@ -62,4 +62,18 @@ contract AnalyticsRegistry {
     event AggregatorAuthorized(address indexed aggregator);
     event AggregatorRevoked(address indexed aggregator);
 
+     // Modifiers
+    modifier onlyAuthorizedAggregator() {
+        require(authorizedAggregators[msg.sender], "Not authorized aggregator");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+        authorizedAggregators[msg.sender] = true;
+        emit AggregatorAuthorized(msg.sender);
+    }
+
+    
+
 }
