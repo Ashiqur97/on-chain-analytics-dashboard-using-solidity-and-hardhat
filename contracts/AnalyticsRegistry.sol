@@ -74,6 +74,22 @@ contract AnalyticsRegistry {
         emit AggregatorAuthorized(msg.sender);
     }
 
-    
+    // Protocol Management
+    function addProtocol(address _protocolAddress, string memory _name) external onlyOwner {
+        require(_protocolAddress != address(0), "Invalid protocol address");
+        require(protocols[_protocolAddress].contractAddress == address(0), "Protocol already exists");
+
+        protocols[_protocolAddress] = Protocol({
+            name: _name,
+            contractAddress: _protocolAddress,
+            tvl: 0,
+            volume24h: 0,
+            uniqueUsers: 0,
+            lastUpdated: block.timestamp
+        });
+
+        registeredProtocols.push(_protocolAddress);
+        emit ProtocolAdded(_protocolAddress, _name);
+    }
 
 }
