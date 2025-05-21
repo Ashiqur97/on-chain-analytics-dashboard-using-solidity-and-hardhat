@@ -92,4 +92,22 @@ contract AnalyticsRegistry {
         emit ProtocolAdded(_protocolAddress, _name);
     }
 
+     function updateProtocolMetrics(
+        address _protocolAddress,
+        uint256 _tvl,
+        uint256 _volume24h,
+        uint256 _uniqueUsers
+    ) external onlyAuthorizedAggregator whenNotPaused nonReentrant {
+        require(protocols[_protocolAddress].contractAddress != address(0), "Protocol not registered");
+
+        Protocol storage protocol = protocols[_protocolAddress];
+        protocol.tvl = _tvl;
+        protocol.volume24h = _volume24h;
+        protocol.uniqueUsers = _uniqueUsers;
+        protocol.lastUpdated = block.timestamp;
+
+        emit ProtocolUpdated(_protocolAddress, _tvl, _volume24h, _uniqueUsers);
+    }
+
+
 }
