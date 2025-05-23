@@ -16,6 +16,12 @@ contract DataAggregator {
     uint256 public constant UPDATE_INTERVAL = 1 hours;
 
     
+    constructor (address _registry) {
+        require(_registry!= address(0), "Invalid registry address");
+        registry = IAnalyticsRegistry(_registry);
+        owner = msg.sender;
+    }
+
     
 
 }
