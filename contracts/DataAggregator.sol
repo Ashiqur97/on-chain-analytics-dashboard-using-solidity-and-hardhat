@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "./interfaces/IAnalyticsRegistry.sol";
+import "./Analytics.sol";
 
 /**
  * @title DataAggregator
@@ -14,6 +15,7 @@ contract DataAggregator {
         require(msg.sender == owner, "Not owner");
         _;
     }
+    
     IAnalyticsRegistry public registry;
     mapping(address => uint256) public lastUpdateTime;
     mapping(address => uint256) public prices;
@@ -23,19 +25,31 @@ contract DataAggregator {
     event MetricsUpdated(address indexed target, uint256 timestamp);
     event RegistryUpdated(address indexed newRegistry);
 
+    /**
+     * @dev Constructor that sets the registry address
+     * @param _registry Address of the Analytics contract implementing IAnalyticsRegistry
+     */
     constructor(address _registry) {
         require(_registry != address(0), "Invalid registry address");
         registry = IAnalyticsRegistry(_registry);
         owner = msg.sender;
     }
 
-    // Configuration
+    /**
+     * @dev Updates the registry address
+     * @param _newRegistry Address of the new Analytics contract
+     */
     function setRegistry(address _newRegistry) external onlyOwner {
         require(_newRegistry != address(0), "Invalid registry address");
         registry = IAnalyticsRegistry(_newRegistry);
         emit RegistryUpdated(_newRegistry);
     }
 
+    /**
+     * @dev Updates the price of a token
+     * @param _token Address of the token to update price for
+     * @param _price New price of the token
+     */
     function updatePrice(address _token, uint256 _price) external onlyOwner {
         require(_token != address(0), "Invalid token address");
         prices[_token] = _price;
@@ -43,82 +57,84 @@ contract DataAggregator {
     }
 
     // Data Collection
-    function updateTokenMetrics(address _token) external {
-        require(prices[_token] > 0, "Price not set");
-        require(block.timestamp >= lastUpdateTime[_token] + UPDATE_INTERVAL, "Too soon to update");
-
-        // Calculate metrics (simplified version)
-        uint256 volume24h = calculateVolume24h(_token);
-        uint256 marketCap = calculateMarketCap(_token, prices[_token]);
-        uint256 holders = getHoldersCount(_token);
-
+    
+    /**
+     * @dev Updates token metrics in the registry
+     * @param _tokenAddress Address of the token to update
+     * @param _price Current price of the token
+     * @param _volume24h 24h trading volume of the token
+     * @param _marketCap Market cap of the token
+     * @param _holders Number of token holders
+     */
+    function updateTokenMetrics(
+        address _tokenAddress,
+        uint256 _price,
+        uint256 _volume24h,
+        uint256 _marketCap,
+        uint256 _holders
+    ) external {
+        _validateUpdate(_tokenAddress, lastUpdateTime[_tokenAddress]);
+        
+        // Update the price in local storage
+        prices[_tokenAddress] = _price;
+        
         // Update registry
         registry.updateTokenMetrics(
-            _token,
-            prices[_token],
-            volume24h,
-            marketCap,
-            holders
+            _tokenAddress,
+            _price,
+            _volume24h,
+            _marketCap,
+            _holders
         );
 
-        lastUpdateTime[_token] = block.timestamp;
-        emit MetricsUpdated(_token, block.timestamp);
+        _updateTimestamp(_tokenAddress);
     }
 
-    function updateProtocolMetrics(address _protocol) external {
-        require(block.timestamp >= lastUpdateTime[_protocol] + UPDATE_INTERVAL, "Too soon to update");
-
-        // Calculate protocol metrics
-        uint256 tvl = calculateProtocolTVL(_protocol);
-        uint256 volume24h = calculateProtocolVolume24h(_protocol);
-        uint256 uniqueUsers = calculateUniqueUsers(_protocol);
+    /**
+     * @dev Updates protocol metrics in the registry
+     * @param _protocolAddress Address of the protocol to update
+     * @param _tvl Total value locked in the protocol
+     * @param _volume24h 24h volume of the protocol
+     * @param _uniqueUsers Number of unique users in the protocol
+     */
+    function updateProtocolMetrics(
+        address _protocolAddress,
+        uint256 _tvl,
+        uint256 _volume24h,
+        uint256 _uniqueUsers
+    ) external {
+        _validateUpdate(_protocolAddress, lastUpdateTime[_protocolAddress]);
 
         // Update registry
         registry.updateProtocolMetrics(
-            _protocol,
-            tvl,
-            volume24h,
-            uniqueUsers
+            _protocolAddress,
+            _tvl,
+            _volume24h,
+            _uniqueUsers
         );
 
-        lastUpdateTime[_protocol] = block.timestamp;
-        emit MetricsUpdated(_protocol, block.timestamp);
+        _updateTimestamp(_protocolAddress);
     }
 
-    // Internal calculation functions
-    function calculateVolume24h(address _token) internal view returns (uint256) {
-        // Implementation would track transfers and swaps over 24h
-        // This is a placeholder implementation
-        return 0;
+    /**
+     * @dev Internal function to validate that the caller is authorized to update metrics
+     * @param _target Address of the target (token or protocol)
+     * @param _lastUpdateTime Last update timestamp for the target
+     */
+    function _validateUpdate(address _target, uint256 _lastUpdateTime) internal view {
+        require(_target != address(0), "Invalid target address");
+        require(block.timestamp >= _lastUpdateTime + UPDATE_INTERVAL, "Too soon to update");
     }
-
-    function calculateMarketCap(address _token, uint256 _price) internal view returns (uint256) {
-        // Implementation would get total supply and multiply by price
-        // This is a placeholder implementation
-        return 0;
-    }
-
-    function getHoldersCount(address _token) internal view returns (uint256) {
-        // Implementation would track unique holders
-        // This is a placeholder implementation
-        return 0;
-    }
-
-    function calculateProtocolTVL(address _protocol) internal view returns (uint256) {
-        // Implementation would sum all locked assets
-        // This is a placeholder implementation
-        return 0;
-    }
-
-    function calculateProtocolVolume24h(address _protocol) internal view returns (uint256) {
-        // Implementation would track protocol transactions over 24h
-        // This is a placeholder implementation
-        return 0;
-    }
-
-    function calculateUniqueUsers(address _protocol) internal view returns (uint256) {
-        // Implementation would track unique addresses interacting with protocol
-        // This is a placeholder implementation
-        return 0;
+    
+    /**
+     * @dev Internal function to update the last update timestamp
+     * @param _target Address of the target (token or protocol)
+     * @return The current block timestamp
+     */
+    function _updateTimestamp(address _target) internal returns (uint256) {
+        uint256 currentTime = block.timestamp;
+        lastUpdateTime[_target] = currentTime;
+        emit MetricsUpdated(_target, currentTime);
+        return currentTime;
     }
 }
