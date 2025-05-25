@@ -59,4 +59,18 @@ contract EventTracker {
         emit SourceAuthorized(msg.sender);
     }
 
+    function addEventType(string calldata _name) external onlyOwner returns (bytes32) {
+        bytes32 eventTypeId = keccak256(abi.encodePacked(_name));
+        require(!eventTypes[eventTypeId].isActive, "Event type already exists");
+
+        eventTypes[eventTypeId] = EventType({
+            name: _name,
+            isActive: true,
+            eventCount:0
+        });
+
+        emit EventTypeAdded(eventTypeId, _name);
+        return eventTypeId;
+    }
+
 }
