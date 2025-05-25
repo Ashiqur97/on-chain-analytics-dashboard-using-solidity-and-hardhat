@@ -79,5 +79,20 @@ contract EventTracker {
         emit EventTypeUpdated(_eventTypeId, _isActive);
     }
     
+        // Source Management
+    function authorizeSource(address _source) external onlyOwner {
+        require(_source != address(0), "Invalid source address");
+        require(!authorizedSources[_source], "Source already authorized");
+        
+        authorizedSources[_source] = true;
+        emit SourceAuthorized(_source);
+    }
+
+        function revokeSource(address _source) external onlyOwner {
+        require(authorizedSources[_source], "Source not authorized");
+        
+        authorizedSources[_source] = false;
+        emit SourceRevoked(_source);
+    }
 
 }
