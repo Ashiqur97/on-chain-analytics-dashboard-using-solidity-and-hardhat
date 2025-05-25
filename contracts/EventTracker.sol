@@ -117,4 +117,38 @@ contract EventTracker {
         emit EventLogged(_eventType, msg.sender, block.timestamp);
     }
 
+     // View Functions
+    function getEventCount(bytes32 _eventType) external view returns (uint256) {
+        return eventTypes[_eventType].eventCount;
+    }
+
+        function getEvents(
+        bytes32 _eventType,
+        uint256 _startIndex,
+        uint256 _count
+    ) external view returns (Event[] memory) {
+        require(_startIndex < events[_eventType].length, "Start index out of bounds");
+        
+        uint256 endIndex = _startIndex + _count;
+        if (endIndex > events[_eventType].length) {
+            endIndex = events[_eventType].length;
+        }
+        
+        Event[] memory result = new Event[](endIndex - _startIndex);
+        for (uint256 i = _startIndex; i < endIndex; i++) {
+            result[i - _startIndex] = events[_eventType][i];
+        }
+        
+        return result;
+    }
+
+    function getEventType(bytes32 _eventTypeId) external view returns (
+        string memory name,
+        bool isActive,
+        uint256 eventCount
+    ) {
+        EventType memory eventType = eventTypes[_eventTypeId];
+        return (eventType.name, eventType.isActive, eventType.eventCount);
+    }
+
 }
