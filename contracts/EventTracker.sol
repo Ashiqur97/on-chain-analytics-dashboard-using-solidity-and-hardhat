@@ -95,4 +95,26 @@ contract EventTracker {
         emit SourceRevoked(_source);
     }
 
+    
+      function logEvent(
+        bytes32 _eventType,
+        bytes calldata _data
+    ) external onlyAuthorizedSource nonReentrant {
+        require(eventTypes[_eventType].isActive, "Event type not active");
+        require(_data.length <= MAX_DATA_SIZE, "Data too large");
+        require(eventTypes[_eventType].eventCount < MAX_EVENTS_PER_TYPE, "Event limit reached");
+
+        Event memory newEvent = Event({
+            eventType: _eventType,
+            source: msg.sender,
+            timestamp: block.timestamp,
+            data: _data
+        });
+
+        events[_eventType].push(newEvent);
+        eventTypes[_eventType].eventCount++;
+
+        emit EventLogged(_eventType, msg.sender, block.timestamp);
+    }
+
 }
