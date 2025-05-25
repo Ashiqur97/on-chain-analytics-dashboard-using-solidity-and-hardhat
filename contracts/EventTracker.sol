@@ -73,4 +73,11 @@ contract EventTracker {
         return eventTypeId;
     }
 
+         function setEventTypeStatus(bytes32 _eventTypeId, bool _isActive) external onlyOwner {
+        require(bytes(eventTypes[_eventTypeId].name).length > 0, "Event type does not exist");
+        eventTypes[_eventTypeId].isActive = _isActive;
+        emit EventTypeUpdated(_eventTypeId, _isActive);
+    }
+    
+
 }
