@@ -58,4 +58,40 @@ contract PriceOracle {
         emit PriceUpdated(_token, _price);
     }
 
+        function getPrice(address _token) external view returns (Price memory) {
+        uint256 price = prices[_token];
+        uint256 timestamp = lastUpdateTimestamp[_token];
+        
+        if (price > 0 && block.timestamp - timestamp <= PRICE_EXPIRATION) {
+            return Price({
+                price: price,
+                timestamp: timestamp,
+                success: true
+            });
+        }
+        
+        return Price({
+            price: 0,
+            timestamp: 0,
+            success: false
+        });
+    }
+
+       function getPriceWithHeartbeat(address _token, uint256 _maxAge) external view returns (Price memory) {
+        Price memory price = this.getPrice(_token);
+        require(price.success, "Price fetch failed");
+        require(block.timestamp - price.timestamp <= _maxAge, "Price too old");
+        return price;
+    }
+
+    function getBatchPrices(address[] calldata _tokens) external view returns (Price[] memory) {
+        Price[] memory priceList = new Price[](_tokens.length);
+        
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            priceList[i] = this.getPrice(_tokens[i]);
+        }
+        
+        return priceList;
+    }
+
 }
