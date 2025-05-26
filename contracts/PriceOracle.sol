@@ -50,4 +50,12 @@ contract PriceOracle {
         emit PriceUpdaterSet(_token, _updater);
     }
 
+    function updatePrice(address _token, uint256 _price) external {
+        require(msg.sender == owner || msg.sender == priceUpdaters[_token], "Not authorized");
+        require(_price > 0, "Invalid price");
+        prices[_token] = _price;
+        lastUpdateTimestamp[_token] = block.timestamp;
+        emit PriceUpdated(_token, _price);
+    }
+
 }
