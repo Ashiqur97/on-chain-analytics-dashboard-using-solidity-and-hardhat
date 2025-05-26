@@ -48,7 +48,7 @@ contract EventTracker {
     event SourceAuthorized(address indexed source);
     event SourceRevoked(address indexed source);
 
-  modifier onlyAuthorizedSource() {
+    modifier onlyAuthorizedSource() {
         require(authorizedSources[msg.sender], "Not authorized source");
         _;
     }
@@ -59,6 +59,7 @@ contract EventTracker {
         emit SourceAuthorized(msg.sender);
     }
 
+    // Event Type Management
     function addEventType(string calldata _name) external onlyOwner returns (bytes32) {
         bytes32 eventTypeId = keccak256(abi.encodePacked(_name));
         require(!eventTypes[eventTypeId].isActive, "Event type already exists");
@@ -66,20 +67,20 @@ contract EventTracker {
         eventTypes[eventTypeId] = EventType({
             name: _name,
             isActive: true,
-            eventCount:0
+            eventCount: 0
         });
 
         emit EventTypeAdded(eventTypeId, _name);
         return eventTypeId;
     }
 
-         function setEventTypeStatus(bytes32 _eventTypeId, bool _isActive) external onlyOwner {
+    function setEventTypeStatus(bytes32 _eventTypeId, bool _isActive) external onlyOwner {
         require(bytes(eventTypes[_eventTypeId].name).length > 0, "Event type does not exist");
         eventTypes[_eventTypeId].isActive = _isActive;
         emit EventTypeUpdated(_eventTypeId, _isActive);
     }
-    
-        // Source Management
+
+    // Source Management
     function authorizeSource(address _source) external onlyOwner {
         require(_source != address(0), "Invalid source address");
         require(!authorizedSources[_source], "Source already authorized");
@@ -88,15 +89,15 @@ contract EventTracker {
         emit SourceAuthorized(_source);
     }
 
-        function revokeSource(address _source) external onlyOwner {
+    function revokeSource(address _source) external onlyOwner {
         require(authorizedSources[_source], "Source not authorized");
         
         authorizedSources[_source] = false;
         emit SourceRevoked(_source);
     }
 
-    
-      function logEvent(
+    // Event Logging
+    function logEvent(
         bytes32 _eventType,
         bytes calldata _data
     ) external onlyAuthorizedSource nonReentrant {
@@ -117,12 +118,12 @@ contract EventTracker {
         emit EventLogged(_eventType, msg.sender, block.timestamp);
     }
 
-     // View Functions
+    // View Functions
     function getEventCount(bytes32 _eventType) external view returns (uint256) {
         return eventTypes[_eventType].eventCount;
     }
 
-        function getEvents(
+    function getEvents(
         bytes32 _eventType,
         uint256 _startIndex,
         uint256 _count
@@ -150,5 +151,4 @@ contract EventTracker {
         EventType memory eventType = eventTypes[_eventTypeId];
         return (eventType.name, eventType.isActive, eventType.eventCount);
     }
-
 }

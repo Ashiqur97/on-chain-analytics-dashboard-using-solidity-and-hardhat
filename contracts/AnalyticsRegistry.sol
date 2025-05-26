@@ -9,6 +9,11 @@ contract AnalyticsRegistry {
     address public owner;
     bool public paused;
     
+    // Reentrancy guard
+    uint256 private constant _NOT_ENTERED = 1;
+    uint256 private constant _ENTERED = 2;
+    uint256 private _status = _NOT_ENTERED;
+    
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
         _;
@@ -20,10 +25,10 @@ contract AnalyticsRegistry {
     }
     
     modifier nonReentrant() {
-        require(!locked, "Reentrant call");
-        locked = true;
+        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
+        _status = _ENTERED;
         _;
-        locked = false;
+        _status = _NOT_ENTERED;
     }
     
     bool private locked;

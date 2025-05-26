@@ -1,17 +1,20 @@
 const hre = require("hardhat");
 
 async function main() {
-    const Analytics = await hre.getContractFactory("Analytics");
-    const analytics = await Analytics.deploy();
+  // Deploy Analytics (main contract)
+  const Analytics = await hre.ethers.getContractFactory("Analytics");
+  const analytics = await Analytics.deploy();
   await analytics.waitForDeployment();
   console.log("Analytics deployed to:", await analytics.getAddress());
 
+  // Deploy DataAggregator
   const DataAggregator = await hre.ethers.getContractFactory("DataAggregator");
-  const dataAggregator = await DataAggregator.deploy();
-  await dataAggregator.waitForDeployment();
-  console.log("DataAggregator deployed to:", await dataAggregator.getAddress());
+  const aggregator = await DataAggregator.deploy(await analytics.getAddress());
+  await aggregator.waitForDeployment();
+  console.log("DataAggregator deployed to:", await aggregator.getAddress());
 
-   const DataProvider = await hre.ethers.getContractFactory("DataProvider");
+  // Deploy DataProvider
+  const DataProvider = await hre.ethers.getContractFactory("DataProvider");
   const dataProvider = await DataProvider.deploy(await analytics.getAddress());
   await dataProvider.waitForDeployment();
   console.log("DataProvider deployed to:", await dataProvider.getAddress());

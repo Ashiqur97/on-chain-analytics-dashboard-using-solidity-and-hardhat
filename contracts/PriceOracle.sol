@@ -1,33 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+/**
+ * @title PriceOracle
+ * @dev Manages price feed integrations and provides price data
+ */
 contract PriceOracle {
     address public owner;
-
+    
     modifier onlyOwner() {
-        require(msg.sender == owner, "Not Owner");
+        require(msg.sender == owner, "Not owner");
         _;
     }
-    
-
-    mapping (address => uint256) public prices;
-    mapping (address => address) public priceUpdaters;
-    mapping (address => uint256) public lastUpdateTimestamp;
+    mapping(address => uint256) public prices;
+    mapping(address => address) public priceUpdaters;
+    mapping(address => uint256) public lastUpdateTimestamp;
     uint256 public constant PRICE_EXPIRATION = 24 hours;
-    
-    event PriceUpdated(address indexed token, uint256 price);
-    event PriceUpdaterSet(address indexed token, address indexed updater);
-    event PriceUpdated(address indexed token, uint256 price, uint256 timestamp);
-
-    struct Price {
-        uint256 price;
-        uint256 timestamp;
-        bool success;
-    }
-
-    constructor() {
-        owner = msg.sender;
-    }
 
     event PriceUpdated(address indexed token, uint256 price);
     event PriceUpdaterSet(address indexed token, address indexed updater);
@@ -58,7 +46,7 @@ contract PriceOracle {
         emit PriceUpdated(_token, _price);
     }
 
-        function getPrice(address _token) external view returns (Price memory) {
+    function getPrice(address _token) external view returns (Price memory) {
         uint256 price = prices[_token];
         uint256 timestamp = lastUpdateTimestamp[_token];
         
@@ -77,7 +65,7 @@ contract PriceOracle {
         });
     }
 
-       function getPriceWithHeartbeat(address _token, uint256 _maxAge) external view returns (Price memory) {
+    function getPriceWithHeartbeat(address _token, uint256 _maxAge) external view returns (Price memory) {
         Price memory price = this.getPrice(_token);
         require(price.success, "Price fetch failed");
         require(block.timestamp - price.timestamp <= _maxAge, "Price too old");
@@ -93,5 +81,4 @@ contract PriceOracle {
         
         return priceList;
     }
-
 }

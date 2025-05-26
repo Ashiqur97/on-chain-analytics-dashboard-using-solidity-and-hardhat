@@ -36,17 +36,15 @@ contract DataProvider {
     ) external {
         analytics.updateToken(token, name, price, volume, holders);
     }
-
-       /**
-     * @dev Updates token data in the Analytics contract
-     * @param token Address of the token to update
-     * @param name Name of the token
-     * @param price Current price of the token
-     * @param volume 24h trading volume of the token
-     * @param holders Number of token holders
-     */
     
-       function submitProtocolData(
+    /**
+     * @dev Updates protocol data in the Analytics contract
+     * @param protocol Address of the protocol to update
+     * @param name Name of the protocol
+     * @param tvl Total value locked in the protocol
+     * @param users Number of unique users in the protocol
+     */
+    function submitProtocolData(
         address protocol,
         string memory name,
         uint256 tvl,
