@@ -36,5 +36,48 @@ describe("Analytics Dashboard", function() {
     });
     });
 
-    
+      describe("Token Management", function () {
+    const tokenAddress = "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6";
+    const tokenName = "Test Token";
+    const price = ethers.utils.parseEther("100");
+    const volume = ethers.utils.parseEther("1000000");
+    const holders = 1000;
+    const marketCap = ethers.utils.parseEther("10000000");
+
+    it("Should update token data through DataProvider", async function () {
+      // Submit token data through DataProvider
+      await dataProvider.submitTokenData(
+        tokenAddress,
+        tokenName,
+        price,
+        volume,
+        holders
+      );
+
+      // Verify token data in Analytics contract
+      const tokenData = await analytics.tokens(tokenAddress);
+      expect(tokenData.name).to.equal(tokenName);
+      expect(tokenData.price).to.equal(price);
+      expect(tokenData.volume).to.equal(volume);
+      expect(tokenData.holders).to.equal(holders);
+    });
+
+    it("Should update token metrics through DataAggregator", async function () {
+      // Submit token metrics through DataAggregator
+      await dataAggregator.updateTokenMetrics(
+        tokenAddress,
+        price,
+        volume,
+        marketCap,
+        holders
+      );
+
+      // Verify token data in Analytics contract
+      const tokenData = await analytics.tokens(tokenAddress);
+      expect(tokenData.price).to.equal(price);
+      expect(tokenData.volume).to.equal(volume);
+      expect(tokenData.holders).to.equal(holders);
+    });
+  });
+
 })
