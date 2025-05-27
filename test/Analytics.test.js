@@ -1,48 +1,61 @@
-const {expect} = require("chai");
-const {ethers} = require("hardhat");
+const { expect } = require("chai");
+const { ethers } = require("hardhat");
 
-describe("Analytics Dashboard", function() {
-    let Analytics,DataAggregator,DataProvider;
-    let analytics,dataAggregator,dataProvider;
-    let owner,addr1,addr2;
+// Import ethers directly
+const { utils } = require("ethers");
 
-    beforeEach(async function() {
-        [owner,addr1,addr2] = await ethers.getSigners();
+// Helper function to parse ether values
+const parseEther = (value) => {
+  return utils.parseEther(value.toString());
+};
 
-        Analytics = await ethers.getContractFactory("Analytics");
-        analytics = await Analytics.deploy();
-        await analytics.deployed();
+describe("Analytics Dashboard", function () {
+  let Analytics, DataAggregator, DataProvider;
+  let analytics, dataAggregator, dataProvider;
+  let owner, addr1, addr2;
 
-        DataAggregator = await ethers.getContractFactory("DataAggregator");
-        dataAggregator = await DataAggregator.deploy();
-        await dataAggregator.deployed();
+  beforeEach(async function () {
+    // Get signers
+    [owner, addr1, addr2] = await ethers.getSigners();
 
-        DataProvider = await ethers.getContractFactory("DataProvider");
-        dataProvider = await DataProvider.deploy();
-        await dataProvider.deployed();
+    // Deploy Analytics contract
+    Analytics = await ethers.getContractFactory("Analytics");
+    analytics = await Analytics.deploy();
+    await analytics.deployed();
 
-        await analytics.addDataProvider(dataAggregator.address);
-        await analytics.addDataProvider(dataProvider.address);
+    // Deploy DataAggregator
+    DataAggregator = await ethers.getContractFactory("DataAggregator");
+    dataAggregator = await DataAggregator.deploy(analytics.address);
+    await dataAggregator.deployed();
+
+    // Deploy DataProvider
+    DataProvider = await ethers.getContractFactory("DataProvider");
+    dataProvider = await DataProvider.deploy(analytics.address);
+    await dataProvider.deployed();
+
+    // Setup permissions
+    await analytics.addDataProvider(dataAggregator.address);
+    await analytics.addDataProvider(dataProvider.address);
+  });
+
+  describe("Basic Setup", function () {
+    it("Should set the right owner", async function () {
+      expect(await analytics.owner()).to.equal(owner.address);
     });
 
-    describe("Basic Setup", function () {
-        it("Should set the right owner", async function () {
-            expect(await analytics.owner()).to.equal(owner.address);
-        });
-
-        it("Should authorize data providers", async function () {
+    it("Should authorize data providers", async function () {
       expect(await analytics.dataProviders(dataProvider.address)).to.be.true;
       expect(await analytics.dataProviders(dataAggregator.address)).to.be.true;
     });
-    });
+  });
 
-      describe("Token Management", function () {
-    const tokenAddress = "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6";
+  describe("Token Management", function () {
+    const tokenAddress = "0x1234567890123456789012345678901234567890";
     const tokenName = "Test Token";
-    const price = ethers.utils.parseEther("100");
-    const volume = ethers.utils.parseEther("1000000");
+    const price = parseEther("100");
+    const volume = parseEther("1000000");
+    const marketCap = parseEther("10000000");
     const holders = 1000;
-    const marketCap = ethers.utils.parseEther("10000000");
 
     it("Should update token data through DataProvider", async function () {
       // Submit token data through DataProvider
@@ -51,6 +64,7 @@ describe("Analytics Dashboard", function() {
         tokenName,
         price,
         volume,
+        marketCap,
         holders
       );
 
@@ -80,8 +94,8 @@ describe("Analytics Dashboard", function() {
     });
   });
 
-   describe("Protocol Management", function () {
-    const protocolAddress = "0x694AA1769357215DE4FAC081bf1f309aDC325306";
+  describe("Protocol Management", function () {
+    const protocolAddress = "0x9876543210987654321098765432109876543210";
     const protocolName = "Test Protocol";
     const tvl = ethers.utils.parseEther("5000000");
     const volume24h = ethers.utils.parseEther("2000000");
@@ -124,19 +138,20 @@ describe("Analytics Dashboard", function() {
     });
   });
 
-    describe("Access Control", function () {
+  describe("Access Control", function () {
     it("Should not allow unauthorized access to update functions", async function () {
       // First, remove the data provider's authorization
       await analytics.removeDataProvider(dataProvider.address);
       
       // Use a valid token address for testing
-      const testTokenAddress = "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6";
+      const testTokenAddress = "0x1234567890123456789012345678901234567890";
       
       // Now try to call update functions from an unauthorized address
       await expect(
         dataProvider.connect(addr1).submitTokenData(
           testTokenAddress,
           "Test Token",
+          0,
           0,
           0,
           0
@@ -157,4 +172,4 @@ describe("Analytics Dashboard", function() {
       ).to.be.revertedWith("Not authorized");
     });
   });
-})
+});

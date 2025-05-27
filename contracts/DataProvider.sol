@@ -25,6 +25,7 @@ contract DataProvider {
      * @param name Name of the token
      * @param price Current price of the token
      * @param volume 24h trading volume of the token
+     * @param marketCap Market capitalization of the token
      * @param holders Number of token holders
      */
     function submitTokenData(
@@ -32,9 +33,10 @@ contract DataProvider {
         string memory name,
         uint256 price,
         uint256 volume,
+        uint256 marketCap,
         uint256 holders
     ) external {
-        analytics.updateToken(token, name, price, volume, holders);
+        analytics.updateToken(token, name, price, volume, marketCap, holders);
     }
     
     /**

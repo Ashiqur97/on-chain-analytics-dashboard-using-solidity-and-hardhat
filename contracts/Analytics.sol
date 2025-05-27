@@ -10,6 +10,7 @@ contract Analytics is IAnalyticsRegistry {
         string name;
         uint256 price;
         uint256 volume;
+        uint256 marketCap;
         uint256 holders;
         uint256 lastUpdate;
     }
@@ -32,7 +33,7 @@ contract Analytics is IAnalyticsRegistry {
     mapping(address => uint256) public protocolUniqueUsers;
     
     // Events
-    event TokenUpdated(address token, uint256 price, uint256 volume);
+    event TokenUpdated(address token, uint256 price, uint256 volume, uint256 marketCap);
     event ProtocolUpdated(address protocol, uint256 tvl, uint256 users);
     event DataProviderAdded(address provider);
     event DataProviderRemoved(address provider);
@@ -63,10 +64,11 @@ contract Analytics is IAnalyticsRegistry {
         TokenData storage token = tokens[_tokenAddress];
         token.price = _price;
         token.volume = _volume24h;
+        token.marketCap = _marketCap;
         token.holders = _holders;
         token.lastUpdate = block.timestamp;
         
-        emit TokenUpdated(_tokenAddress, _price, _volume24h);
+        emit TokenUpdated(_tokenAddress, _price, _volume24h, _marketCap);
     }
     
     function updateProtocolMetrics(
@@ -105,16 +107,18 @@ contract Analytics is IAnalyticsRegistry {
         string memory name,
         uint256 price,
         uint256 volume,
+        uint256 marketCap,
         uint256 holders
     ) external onlyDataProvider {
         tokens[tokenAddress] = TokenData(
             name,
             price,
             volume,
+            marketCap,
             holders,
             block.timestamp
         );
-        emit TokenUpdated(tokenAddress, price, volume);
+        emit TokenUpdated(tokenAddress, price, volume, marketCap);
     }
     
     function updateProtocol(

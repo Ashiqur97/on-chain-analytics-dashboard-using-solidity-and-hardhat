@@ -7,6 +7,7 @@ interface IAnalytics {
         string memory name,
         uint256 price,
         uint256 volume,
+        uint256 marketCap,
         uint256 holders
     ) external;
     
