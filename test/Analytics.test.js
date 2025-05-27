@@ -80,4 +80,81 @@ describe("Analytics Dashboard", function() {
     });
   });
 
+   describe("Protocol Management", function () {
+    const protocolAddress = "0x694AA1769357215DE4FAC081bf1f309aDC325306";
+    const protocolName = "Test Protocol";
+    const tvl = ethers.utils.parseEther("5000000");
+    const volume24h = ethers.utils.parseEther("2000000");
+    const uniqueUsers = 5000;
+
+    it("Should update protocol data through DataProvider", async function () {
+      // Submit protocol data through DataProvider
+      await dataProvider.submitProtocolData(
+        protocolAddress,
+        protocolName,
+        tvl,
+        uniqueUsers
+      );
+
+      // Verify protocol data in Analytics contract
+      const protocolData = await analytics.protocols(protocolAddress);
+      expect(protocolData.name).to.equal(protocolName);
+      expect(protocolData.tvl).to.equal(tvl);
+      expect(protocolData.users).to.equal(uniqueUsers);
+    });
+
+    it("Should update protocol metrics through DataAggregator", async function () {
+      // Submit protocol metrics through DataAggregator
+      await dataAggregator.updateProtocolMetrics(
+        protocolAddress,
+        tvl,
+        volume24h,
+        uniqueUsers
+      );
+
+      // Verify protocol metrics in Analytics contract
+      const protocolData = await analytics.protocols(protocolAddress);
+      expect(protocolData.tvl).to.equal(tvl);
+      expect(protocolData.users).to.equal(uniqueUsers);
+      
+      // Verify protocol metrics through IAnalyticsRegistry view functions
+      expect(await analytics.protocolTVL(protocolAddress)).to.equal(tvl);
+      expect(await analytics.protocolVolume24h(protocolAddress)).to.equal(volume24h);
+      expect(await analytics.protocolUniqueUsers(protocolAddress)).to.equal(uniqueUsers);
+    });
+  });
+
+    describe("Access Control", function () {
+    it("Should not allow unauthorized access to update functions", async function () {
+      // First, remove the data provider's authorization
+      await analytics.removeDataProvider(dataProvider.address);
+      
+      // Use a valid token address for testing
+      const testTokenAddress = "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6";
+      
+      // Now try to call update functions from an unauthorized address
+      await expect(
+        dataProvider.connect(addr1).submitTokenData(
+          testTokenAddress,
+          "Test Token",
+          0,
+          0,
+          0
+        )
+      ).to.be.revertedWith("Not authorized");
+
+      // Remove aggregator's authorization
+      await analytics.removeDataProvider(dataAggregator.address);
+      
+      await expect(
+        dataAggregator.connect(addr1).updateTokenMetrics(
+          testTokenAddress,
+          0,
+          0,
+          0,
+          0
+        )
+      ).to.be.revertedWith("Not authorized");
+    });
+  });
 })
